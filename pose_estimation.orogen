@@ -5,11 +5,12 @@ using_library "pose_estimation"
 
 import_types_from "base"
 import_types_from "pose_estimationTypes.hpp"
+import_types_from "pose_estimation/BaseFilter.hpp"
 
 task_context "RBSFilter" do
     abstract
     needs_configuration
-   
+
     #******************************
     #***** Filter Properties ******
     #******************************
@@ -23,11 +24,11 @@ task_context "RBSFilter" do
 
     property( "process_noise", "/pose_estimation/ProcessNoise" ).
         doc("Filter process noise, NaN values will be ignored and set to a healthy but likely overconfident value.")
-    
-    
+
+
     property( 'target_frame', '/std/string', 'world' ).
     	doc "The target frame in the generated poses. The source frame is the body frame (as declared in the transformer configuration)"
-    
+
     #******************************
     #******* Output Ports *********
     #******************************
@@ -42,7 +43,7 @@ task_context "RBSFilter" do
         doc 'resets the current state to the initial state.'
 
     #******************************
-    #******** Task States ********* 
+    #******** Task States *********
     #******************************
     runtime_states :MISSING_TRANSFORMATION, :TRANSFORMATION_ALIGNMENT_FAILURES
     error_states :CRITICAL_ALIGNMENT_FAILURE
@@ -62,40 +63,40 @@ task_context "UWPoseEstimator" do
         doc "acceleration samples with uncertainty from an IMU, in case this port is connected the measurement uncertainty is used instead of the process noise."
 
     input_port( "orientation_samples", "/base/samples/RigidBodyState" ).
-	needs_reliable_connection.
-	doc "orientation samples from an IMU and or a FOG, containing the orientation and the angular velocity."
+	      needs_reliable_connection.
+	      doc "orientation samples from an IMU and or a FOG, containing the orientation and the angular velocity."
 
     input_port( "depth_samples", "/base/samples/RigidBodyState" ).
-	needs_reliable_connection.
-	doc "depth samples from a pressure sensor, containing the absolute z-position in world coordinates."
+	      needs_reliable_connection.
+	      doc "depth samples from a pressure sensor, containing the absolute z-position in world coordinates."
 
     input_port( "dvl_velocity_samples", "/base/samples/RigidBodyState" ).
-	needs_reliable_connection.
-	doc "velocity samples from a DVL, containing the velocity."
-	
+	      needs_reliable_connection.
+	      doc "velocity samples from a DVL, containing the velocity."
+
     input_port( "model_velocity_samples", "/base/samples/RigidBodyState" ).
-	needs_reliable_connection.
-	doc "model based velocity samples, containing the xy velocity."
+	     needs_reliable_connection.
+	     doc "model based velocity samples, containing the xy velocity."
 
     input_port( "lbl_position_samples", "/base/samples/RigidBodyState" ).
-	needs_reliable_connection.
-	doc "position samples from a LBL or USBL, containing the absolute position in world coordinates."
-	
+	     needs_reliable_connection.
+	     doc "position samples from a LBL or USBL, containing the absolute position in world coordinates."
+
     input_port( "xy_position_samples", "/base/samples/RigidBodyState" ).
-	needs_reliable_connection.
-	doc "position samples from a localization module, containing the xy position in world coordinates."
-	
+	     needs_reliable_connection.
+	     doc "position samples from a localization module, containing the xy position in world coordinates."
+
     input_port( "gps_position_samples", "/base/samples/RigidBodyState" ).
-	needs_reliable_connection.
-	doc "position samples from a gps-sensor, containing position in gps-coordinates"
+	     needs_reliable_connection.
+	     doc "position samples from a gps-sensor, containing position in gps-coordinates"
 
     input_port( "xyz_position_samples", "/base/samples/RigidBodyState" ).
-	needs_reliable_connection.
-	doc "position samples from a localization module, containing the xyz position in world coordinates."
-	
+	     needs_reliable_connection.
+	     doc "position samples from a localization module, containing the xyz position in world coordinates."
+
 
     #******************************
-    #** Aggregator Parameters ***** 
+    #** Aggregator Parameters *****
     #******************************
     transformer do
         transformation("imu", "body")
@@ -103,17 +104,17 @@ task_context "UWPoseEstimator" do
         transformation("dvl", "body")
         transformation("lbl", "body")
         transformation("gps", "body")
-        
+
         align_port("acceleration_samples", 0.01)
-	align_port("orientation_samples", 0.01)
-	align_port("depth_samples", 0.01)
-	align_port("dvl_velocity_samples", 0.01)
-	align_port("model_velocity_samples", 0.01)
-	align_port("lbl_position_samples", 0.01)
-	align_port("xy_position_samples", 0.01)
-	align_port("gps_position_samples", 0.01)
-	align_port("xyz_position_samples", 0.01)
-	max_latency(0.1)
+	      align_port("orientation_samples", 0.01)
+	      align_port("depth_samples", 0.01)
+	      align_port("dvl_velocity_samples", 0.01)
+	      align_port("model_velocity_samples", 0.01)
+	      align_port("lbl_position_samples", 0.01)
+	      align_port("xy_position_samples", 0.01)
+	      align_port("gps_position_samples", 0.01)
+	      align_port("xyz_position_samples", 0.01)
+	      max_latency(0.1)
     end
 
     periodic 0.01
@@ -140,10 +141,10 @@ task_context "HighDelayPoseEstimator" do
 
 
     #******************************
-    #** Aggregator Parameters ***** 
+    #** Aggregator Parameters *****
     #******************************
     transformer do
-	transformation("xy_map", "target_map")
+	      transformation("xy_map", "target_map")
         align_port("pose_samples_slow", 0.01)
         align_port("xy_position_samples", 5.0)
         max_latency(30.0)
@@ -160,28 +161,117 @@ task_context "VehiclePoseEstimator" do
     #******* Input Ports **********
     #******************************
     input_port( "orientation_samples", "/base/samples/RigidBodyState" ).
-	needs_reliable_connection.
-	doc "orientation samples from an IMU and or a FOG, containing the orientation and the angular velocity."
+	     needs_reliable_connection.
+	     doc "orientation samples from an IMU and or a FOG, containing the orientation and the angular velocity."
 
     input_port( "velocity_samples", "/base/samples/RigidBodyState" ).
-	needs_reliable_connection.
-	doc "velocity samples from the odometry, containing the velocity."
+	     needs_reliable_connection.
+	     doc "velocity samples from the odometry, containing the velocity."
 
     input_port( "position_samples", "/base/samples/RigidBodyState" ).
-	needs_reliable_connection.
-	doc "position samples from a slam component, containing the absolute position in world coordinates."
-
+	     needs_reliable_connection.
+	     doc "position samples from a slam component, containing the absolute position in world coordinates."
 
     #******************************
-    #** Aggregator Parameters ***** 
+    #** Aggregator Parameters *****
     #******************************
     transformer do
         transformation("imu", "body")
-        
-	align_port("orientation_samples", 0.01)
-	align_port("velocity_samples", 0.01)
-	align_port("position_samples", 0.01)
-	max_latency(0.1)
+
+	      align_port("orientation_samples", 0.01)
+	      align_port("velocity_samples", 0.01)
+	      align_port("position_samples", 0.01)
+	      max_latency(0.1)
+    end
+
+    periodic 0.01
+end
+
+task_context "FastSlowPoseEstimator" do
+    needs_configuration
+
+    #******************************
+    #******* Input Ports **********
+    #******************************
+    input_port( "orientation_samples", "/base/samples/RigidBodyState" ).
+	      needs_reliable_connection.
+	      doc "orientation samples from an IMU and or a FOG, containing the orientation and the angular velocity."
+
+    input_port( "depth_samples", "/base/samples/RigidBodyState" ).
+	      needs_reliable_connection.
+	      doc "depth samples from a pressure sensor, containing the absolute z-position in world coordinates."
+
+    input_port( "dvl_velocity_samples", "/base/samples/RigidBodyState" ).
+	      needs_reliable_connection.
+	      doc "velocity samples from a DVL, containing the velocity."
+
+    input_port( "lbl_position_samples", "/base/samples/RigidBodyState" ).
+	     needs_reliable_connection.
+	     doc "position samples from a LBL or USBL, containing the absolute position in world coordinates."
+
+    input_port( "xy_position_samples", "/base/samples/RigidBodyState" ).
+	     needs_reliable_connection.
+	     doc "position samples from a localization module, containing the xy position in world coordinates."
+
+    input_port( "gps_position_samples", "/base/samples/RigidBodyState" ).
+	     needs_reliable_connection.
+	     doc "position samples from a gps-sensor, containing position in gps-coordinates"
+
+    #******************************
+    #***** Filter Properties ******
+    #******************************
+    # Deprecated, only the UKF is available
+    property( "filter_type", "/pose_estimation/deprecated/FilterType", :UKF )
+
+    property( "max_time_delta", "double", 2.0 )
+
+    property( "initial_state", "/base/samples/RigidBodyState" ).
+       doc("the initial state, NaN values will be ignored.")
+
+    property( "process_noise", "/pose_estimation/ProcessNoiseBase" ).
+       doc("Filter process noise, NaN values will be ignored and set to a healthy but likely overconfident value.")
+
+    property( 'target_frame', '/std/string', 'world' ).
+    	doc "The target frame in the generated poses. The source frame is the body frame (as declared in the transformer configuration)"
+
+    #Stream aligner properties
+    #roperty( "max_time_delta", "double", 2.0)
+    #property( "max_time_delta", "double", 2.0)
+    #property( "max_time_delta", "double", 2.0)
+    #property( "max_time_delta", "double", 2.0)
+    #property( "max_time_delta", "double", 2.0)
+    #property( "max_time_delta", "double", 2.0)
+    #property( "max_time_delta", "double", 2.0)
+
+    #******************************
+    #******* Output Ports *********
+    #******************************
+    output_port( "pose_samples", "/base/samples/RigidBodyState" ).
+       doc "timestamped samples of the current estimated pose of the robot."
+
+    #******************************
+    #********* Operations *********
+    #******************************
+    operation('resetState').
+       returns('bool').
+       doc 'resets the current state to the initial state.'
+
+    #******************************
+    #******** Task States *********
+    #******************************
+    runtime_states :MISSING_TRANSFORMATION, :TRANSFORMATION_ALIGNMENT_FAILURES
+    error_states :CRITICAL_ALIGNMENT_FAILURE
+
+    #******************************
+    #** Aggregator Parameters *****
+    #******************************
+    transformer do
+        transformation("imu", "body")
+        transformation("pressure_sensor", "body")
+        transformation("dvl", "body")
+        transformation("lbl", "body")
+        transformation("gps", "body")
+        max_latency(0.1)
     end
 
     periodic 0.01
